@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"io"
 	"net/http"
 	"strings"
 
@@ -15,40 +16,35 @@ type Qus struct {
 	Answer   []string
 }
 
-func ProcessDate(doc *goquery.Document) {
-
-}
-
-func Crawler(url string) ([]Qus, error) {
+func ProcessDate(reader io.Reader) ([]Qus, error) {
+	doc, err := goquery.NewDocumentFromReader(reader)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
 	var (
-		questions = make([]Qus, 0)
+		questions []Qus
 		qs        string
 	)
+	doc.Find("form .style1 .style1").Each(func(i int, s *goquery.Selection) {
+		ans := make([]string, 0)
+		s.Find("strong").Each(func(i int, selection *goquery.Selection) {
+			qs = strings.TrimSpace(selection.Text())
+		})
+		s.Find(".green").Each(func(i int, selection *goquery.Selection) {
+			ans = append(ans, strings.TrimSpace(selection.Text()))
+		})
+		questions = append(questions, Qus{qs, ans})
+	})
+	return questions, nil
+}
 
+func Crawler(url string) (io.Reader, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-	defer resp.Body.Close()
-
 	r := transform.NewReader(resp.Body, simplifiedchinese.GBK.NewDecoder())
-	doc, err := goquery.NewDocumentFromReader(r)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	doc.Find("form .style1 .style1").Each(func(i int, s *goquery.Selection) {
-		ans := make([]string, 0)
-		s.Find("strong").Each(func(i int, selection *goquery.Selection) {
-			qs = strings.TrimSpace(s.Text())
-		})
-		s.Find(".green").Each(func(i int, selection *goquery.Selection) {
-			ans = append(ans, strings.TrimSpace(s.Text()))
-		})
-		questions = append(questions, Qus{qs, ans})
-
-	})
-	return questions, nil
+	return r, nil
 }
