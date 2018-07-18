@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"log"
 
-	"crawler/crawler"
+	"github.com/hapi666/playground/crawler"
 )
 
 func main() {
-	reader, err := crawler.Crawler("http://www.apesk.com/16pf/")
+	resu, err := crawler.Crawl("http://www.apesk.com/16pf/")
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal(err)
 	} else {
-		resu := crawler.ProcessDate(reader)
 		fmt.Printf("%v\n", resu)
 	}
 }

@@ -16,7 +16,7 @@ type Qus struct {
 	Answer   []string
 }
 
-func ProcessDate(reader io.Reader) ([]Qus, error) {
+func processData(reader io.Reader) ([]Qus, error) {
 	doc, err := goquery.NewDocumentFromReader(reader)
 	if err != nil {
 		log.Error(err)
@@ -39,12 +39,14 @@ func ProcessDate(reader io.Reader) ([]Qus, error) {
 	return questions, nil
 }
 
-func Crawler(url string) (io.Reader, error) {
+func Crawl(url string) ([]Qus, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
+	defer resp.Body.Close()
 	r := transform.NewReader(resp.Body, simplifiedchinese.GBK.NewDecoder())
-	return r, nil
+	result, err := processData(r)
+	return result, nil
 }
